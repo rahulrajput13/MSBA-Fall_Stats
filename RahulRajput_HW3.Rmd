@@ -1,0 +1,326 @@
+---
+title: "Rahul Rajput_HW3"
+author: "Rahul Rajput"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r}
+
+#### ANSWER 1 ####
+
+electronics = read.csv("Electronics.csv")
+mall_dummy = ifelse(electronics$Location=="Mall",1,0)
+downtown_dummy = ifelse(electronics$Location=="Downtown",1,0)
+sales = electronics$Sales
+households = electronics$Households
+
+model_q1 = lm(sales~mall_dummy+downtown_dummy+households)
+summary(model_q1)
+
+confint(model_q1)
+
+sprintf("Mean sales in a suburban mall are approximately 15,000 higher than sales in a Suburban street whereas mean sales in a downtown store are approximately 6,900 higher than sales in a suburban street.")
+
+sprintf("Mean Sales when store is located on a Suburban Street are approximately 15,000.") 
+sprintf("Mean sales when store is located in downtown are approximately 21,900.")
+sprintf("Mean sales when store is located in a suburban mall are 43,400")
+
+sprintf("The difference in wages between stores located on a Suburban street and the downtown is not statistically significant as is evident by the confidence interval for the difference which contains 0.")
+
+
+```
+
+```{r}
+
+#### ANSWER 2 ####
+
+winter = read.csv("WinterFun.csv")
+#winter
+
+#Part A
+sprintf("Sales = beta0 + beta1*Time")
+model_time = lm(winter$SALES~winter$TIME)
+summary(model_time)
+
+#Part B
+plot(winter$TIME,winter$SALES,type='l')
+sprintf("There is strong evidence of seasonality in Sales with regular dips and rises in Sales amount each year.")
+
+#Part C
+quarter1 = ifelse(winter$QUARTER==1,1,0)
+quarter2 = ifelse(winter$QUARTER==2,1,0)
+quarter3 = ifelse(winter$QUARTER==3,1,0)
+quarter4 = ifelse(winter$QUARTER==4,1,0)
+
+#Part D
+sprintf("H0 for Global F-test: beta1 = beta2 = beta3 = 0")
+sprintf("H1 for Global F-test: Atleast one of beta1, beta2 or beta3 is not zero")
+
+model_seasonal = lm(winter$SALES ~ quarter2 + quarter3 + quarter4)
+summary(model_seasonal)
+anova(model_seasonal)
+
+sprintf("The overal model in itself has a p-value lower than the significance level therefore we failt to reject the Null Hypothesis for it")
+
+model_seasonal_partial = lm(winter$SALES ~ winter$TIME)
+summary(model_seasonal_partial)
+anova(model_seasonal_partial)
+
+sprintf("H0 for Partial F Test: beta3 = 0")
+sprintf("H1 for Partial F Test: beta3 != 0")
+
+SSE_R = 36656
+SSE_F = 9622
+MSE_F = 1016
+
+partialf = ((SSE_R - SSE_F)/(3-2))/MSE_F
+pval_partialf = pf(partialf, 1, length(winter$TIME)-3-1, lower.tail = FALSE)
+pval_partialf
+
+sprintf("Since the p-value for the Partial F test is highly significant we reject the Null Hypothesis. Therefore we can conclude that the seasonality is important in determining the vale of Sales.")
+
+partial_coeff = (SSE_R - SSE_F)/SSE_R
+partial_coeff
+
+sprintf("The proprtion of variation in Sales which can be explained by including the seasonality component is 73.7%%")
+```
+
+```{r}
+
+#### ANSWER 3 ####
+
+emp = read.csv("EmploymentDiscrimination.csv")
+#emp
+
+# Part A
+dummy_male = ifelse(emp$GENDER == "MALE",1,0)
+
+model_q3.1 = lm(emp$SALARY ~ emp$EDUCAT + dummy_male)
+summary(model_q3.1)
+
+#Part B
+sprintf("Holding Education Levels constant, we see that Males on average are likely to earn 691 dollars more than Females.At this stage it seems that there is evidence of gender discrimination at the bank.")
+
+#Part C
+sprintf("H0: beta3 = 0") 
+sprintf("H01: beta3 != 0") 
+
+model_q3.2 = lm(emp$SALARY ~ emp$EDUCAT + dummy_male + emp$EDUCAT:dummy_male)
+summary(model_q3.2)
+
+sprintf("From the model we can see that the interaction between Education Level and Gender variables is not significant therefore we fail to reject the Null Hypothesis.")
+
+#Part D
+
+### Creating the plot of regression lines.
+model_q3_plot = lm(emp$SALARY ~ dummy_male + emp$EDUCAT)
+model_q3_plot.coeff <- coef(model_q3_plot)
+
+plot(emp$SALARY~emp$EDUCAT, 
+     emp, pch=16, 
+     col=as.numeric(as.factor(emp$GENDER))+1)
+abline(a=model_q3_plot.coeff[1], 
+       b=model_q3_plot.coeff[3], 
+       col=2)
+abline(a=model_q3_plot.coeff[1] + model_q3_plot.coeff[2], 
+       b=model_q3_plot.coeff[3], 
+       col=3)
+legend("bottomleft", levels(as.factor(emp$GENDER)), 
+       pch=11, 
+       lwd=1, 
+       col=2:4,
+       cex = 0.5)
+
+sprintf("The two regressions are parallel.")
+
+# Part E
+summary(model_q3.1)
+summary(model_q3.2)
+sprintf("In the first model the dummy variable for gender and education level were both highly significant whereas when the model was run after including the interaction effect between Gender and Education Level, only the Education level was slightly significant and the interaction term and gender dummy variable were not significant. Overall both models were significant with very similar adjusted R squared values.")
+
+#Part F
+model_q3.1 = lm(emp$SALARY ~ emp$EDUCAT + dummy_male)
+anova(model_q3.1)
+q3_SSE_F1 = 29491546
+q3_MSE_F1 = 327684
+
+model_q3.2 = lm(emp$SALARY ~ emp$EDUCAT + dummy_male + emp$EDUCAT:dummy_male)
+anova(model_q3.2)
+q3_SSE_F2 = 294054426
+q3_MSE_F2 = 326454
+
+model_q3_partial = lm(emp$SALARY ~ emp$EDUCAT)
+summary(model_q3_partial)
+anova(model_q3_partial)
+q3_SSE_R = 38460756
+
+sprintf("H0 for Partial F Test 1: beta2 = 0")
+sprintf("H1 for Partial F Test 1: beta2 != 0")
+
+partialf_1 = ((q3_SSE_R - q3_SSE_F1)/(2-1))/q3_MSE_F1
+pval_partialf1 = pf(partialf_1, 1, 93-3-1, lower.tail = FALSE)
+partialf_1
+pval_partialf1
+
+sprintf("Since the p-value of the F statistic is highly significant we reject the Null Hypothesis which implies that the Gender variable is explaining significant levels of variation within the model.")
+
+sprintf("H0 for Partial F Test 2: beta2 = beta3 = 0")
+sprintf("H1 for Partial F Test 2: Atleast one beta is not equal to 0")
+
+partialf_2 = ((q3_SSE_R - q3_SSE_F2)/(3-1))/q3_MSE_F2
+pval_partialf2 = pf(partialf_2, 2, 93-3-1, lower.tail = FALSE)
+partialf_2
+pval_partialf2
+
+sprintf("Since the p-value for the F statistic is not significant therefore we fail to reject the Null Hypothesis. This means that gender and the interaction term between gender and education level do not explain significant variation in the Salary levels.")
+
+# Part G
+sprintf("Despite having very similar Adjusted R square values our results from the partial F tests run imply that the model used in part c is worse than the model created in part a. The discrepancy in results is likely caused by the fact that a large proportion of the variance is simply explained by Education level. Including the interaction effect did not affect predicted values and therefore the oveall model was still significant. The model in part c would be more prone to overfitting the data than the model in part a.
+        Individual t-tests are also more prone to a Type 1 Error and therefore more sensitive")
+
+sprintf("From the tests performed we can infer that the relationship between mean salary and gender does not depend on Education level. After comparing Adjusted R-squared value for the model regressing Salary on only Education Level and model regressing Salary on Education and Gender, I would go ahead with the model that accounts for both Education and Gender.")
+```
+
+```{r}
+
+#### ANSWER 4 ###
+
+downloads = read.csv("Downloads.csv")
+#downloads
+
+vendor_dummy = ifelse(downloads$Vendor == "MS",1,0)
+model_q4 = lm(downloads$Transfer.Time..secs. ~ vendor_dummy + downloads$File.Size..MB.)
+summary(model_q4)
+
+model_q4.1 = lm(downloads$Transfer.Time..secs. ~ vendor_dummy + downloads$File.Size..MB. + vendor_dummy:downloads$File.Size..MB.)
+summary(model_q4.1 )
+
+subset_MS <- subset(downloads, downloads$Vendor == "MS")
+subset_NP <- subset(downloads, downloads$Vendor == "NP")
+
+plot(downloads$File.Size..MB.,downloads$Transfer.Time..secs., 
+     main = "Interaction Plot",
+     xlab = "File Size",
+     ylab = "Download Times",
+     col = ifelse(downloads$Vendor == "MS", "red", "blue"))
+legend("bottomright", 
+       pch = c(1, 1), 
+       c("MS", "NP"), 
+       col = c("red", "blue"),
+       cex = 0.5)
+abline(lm(subset_MS$Transfer.Time..secs. ~ subset_MS$File.Size..MB.), col = "red")
+abline(lm(subset_NP$Transfer.Time..secs. ~ subset_NP$File.Size..MB.), col = "blue")
+
+sprintf("For the average file download time, holding file size constant, vendor MS is faster by an average of 5.5 seconds.")
+sprintf("The download times differ for each vendor by file size. After accounting for file size we found that vendor MS has better download times than vendor NP for files which are more than roughly 28 MB in size..")
+sprintf("I would recommedn going with vendor MS even thought NP has slightly better download times for small files. NP's performance gets worse as the file sizes increase.")
+
+```
+
+```{r}
+
+#### ANSWER 5 ####
+
+fisher = read.csv("Fisher Index.csv")
+#fisher
+
+# Y: Anuual rate of return
+# X: Return on Market Portfolio
+
+# Model with intercept
+model_q5_intercept = lm(fisher$Y ~ fisher$X)
+summary(model_q5_intercept)
+
+#Model without intercept
+model_q5_nointercept = lm(fisher$Y ~ 0 + fisher$X)
+summary(model_q5_nointercept)
+
+sprintf("The model without the intercept fits slightly better than the model with an intercept. The intercept was not significant.")
+
+raw_r_squared = (sum(fisher$X*fisher$Y))^2/(sum((fisher$X)^2)*sum((fisher$Y)^2))
+raw_r_squared
+
+sprintf("The raw R-squared value for model without intercept is better than the R-squared value for the model with intercept. Therfore it is better to use the model without an intercept in this case to model Annual Rate or Returns as it explains more variation. Also in this case we are only interested in knowing how a Market Portfolio's performance affects the Mutual Funds performance. The intercept does not add any value to out analysis.")
+```
+
+```{r}
+
+#### ANSWER 6 ####
+
+corp = read.csv("CorporateFinancials.csv")
+#corp
+
+#Part A
+model_q6.1 = lm(corp$Dividend ~ corp$After_Tax_Profit)
+summary(model_q6.1)
+sprintf("From the overall validity of the model and the highly significant p-value for After tax Profit we can infer that there is a linear relaltionship between After Tax Profits and Dividend Payments.")
+
+#Part B
+Q1 = ifelse(corp$Quarter == 1,1,0)
+Q2 = ifelse(corp$Quarter == 2,1,0)
+Q3 = ifelse(corp$Quarter == 3,1,0)
+Q4 = ifelse(corp$Quarter == 4,1,0)
+
+model_q7.2 = lm(corp$Dividend ~ 0 + Q2 + Q3 + Q4 + corp$After_Tax_Profit)
+summary(model_q7.2)
+sprintf("There does not appear to be a seasonality component within the data. To account for changing intercept and slope coefficients for different quarters, we run the model and test whether the coefficients for the quarters are significantly different. From the model we see that none of the quarters are significantly different from each other, therefore we can proceeed with the model without changing it,")
+
+#Part C
+sprintf("I did expect seasonality effects as corporate profits would vary with certain quarters. However the data would involve payments and taxes from large industries which usually would not exhibit seasonal trends such as Oil, Gas, Agriculture etc.")
+
+```
+
+```{r}
+
+#### ANSWER 7 ###
+
+mowers = read.csv("Mowers.csv")
+#mowers
+
+#Part A
+model_mowers = lm(mowers$Sales ~ mowers$Temperature + mowers$Advertising + mowers$Discount)
+summary(model_mowers)
+
+sprintf("The Global F-statistic for the model is highly significant which implies that the model explains the variation in Sales well. However, only the Advertising variable is significant at the 5%% level. We can therefore infer that Temperature and Discout offered do not impact Sales.")
+
+#Part B
+plot(mowers$Temperature,mowers$Advertising)
+plot(mowers$Temperature,mowers$Discount)
+cor(mowers$Temperature,mowers$Advertising)
+cor(mowers$Temperature,mowers$Discount)
+
+summary(lm(mowers$Temperature~mowers$Advertising))
+summary(lm(mowers$Temperature~mowers$Discount))
+
+sprintf("Advertising spend is strongly correlated with Temperature whereas discounts offered are also moderately correlated with Temperature. This could be due to general lawn mower sales picking up in Spring and Summer and reducing in Winters. The firm would offer more advertisements and sicounts to attract customers during Spring and Summer as that is when more custoemrs would be in need of lawn mowers. Linear regression models of Advertising on Temperature and Discounts on Temperature are also highly significant.")
+
+summary(lm(mowers$Sales~mowers$Advertising))
+
+sprintf("Data-based imperfect Multicollinearity exists in the dataset. Since the Multicollinearity is not perfect the estimators are still Best. The model interpretations align with what we would expect to drive sales. We can simply run the model using just Advertising which would also proxy for Temperature.")
+
+```

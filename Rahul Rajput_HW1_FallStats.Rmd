@@ -1,0 +1,147 @@
+---
+title: "RahulRajput_HW1_Fall_Stats"
+author: "Rahul Rajput"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+### ANSWER 1 ###
+
+#Multinomial
+#Goodness of Fit
+
+# Part a #
+sprintf("The Normal Quantile Plot indicates divergence from a normal distribution.")
+
+# Part b #
+sprintf("For best results it is important to ensure that each cell has an expected value greater than 5. Otherwise the chi-square statistic might be inflated leading to a very small p-value - increasing the likelihood of a Type 2 Error")
+
+# Part c #
+
+obs_values = c(18,19,56,128,178,66,23,16)
+exp_values = c(10.02,31.24,76.16,121.42,126.61,86.37,38.53,13.66)
+total_exp = sum(exp_values)
+exp_probs = exp_values/total_exp
+round(exp_probs,digits=2)
+
+table1 = data.frame(obs_values,exp_values)
+
+sprintf("H0: P1 = 0.02, P2 = 0.06, P3 = 0.15, P4 = 0.24, P5 = 0.25, P6 = 0.17, P7 = 0.08, P8 = 0.03")
+sprintf("H1: Atleast one proportion is different")
+
+chisq.test(x = obs_values, p = exp_probs)
+#sprintf("Chi-Squared value = 49.168, p-value = 2.103e-08")
+pchisq(49.168,5,lower.tail = FALSE)
+
+chisq.test(table1)
+#sprintf("Chi-Squared value = 24.001, p-value = 0.001139")
+pchisq(24,5,lower.tail = FALSE)
+# Part d #
+
+sprintf("Since the p-value is very small we can reject the Null Hypothesis. This implies that the Goodness of Fit test agrees with the initial assumption that the stock returns are not normal.")
+
+# Part e #
+sprintf("The QQ plot is a visual tool to check for nomality. The advantage is that we can infer whether a certain distribution is close enough to be approximated as normal and treat it as such wheresas the same distributions would have been rejected as being normal by the chi-squared test. The advantage of a chi squared test is that it has a high level of accuracy, highly sensitive to outliers, which helps identify if a distribution is truly normal or not. It has a lower margin of error than estimating via nornal quantile plots.")
+```
+
+
+```{r}
+
+### ANSWER 2 ###
+
+stockmarket  = read.csv("Stock Market.csv")
+#stockmarket
+
+sprintf("We want to check whether some days are better or worse for trading, i.e., whether returns are dependent on days or not, Chi Square Contingency Table")
+
+# Part a #
+stockmarket$Market.Direction = factor(stockmarket$Market.Direction)
+#stockmarket
+
+sprintf("H0: Stock Returns and Days of the week are independent.")
+sprintf("H1: Stock Returns and Days of the week are dependent.")
+
+chisq.test(stockmarket$Market.Direction,stockmarket$No..of.Days,correct = FALSE)
+sprintf("Since the p-value is large we fail to reject the Null Hypothesis that Days of the Week and Returns are independent.")
+
+# Part b #
+
+sprintf("The test used in part a compares if the probability of getting positive or negative stock returns is significantly different for the days of the week. But the second approach only compares the probability of getting positive returns more than 50%% of a time on a single day.")
+
+# Part c #
+
+sprintf("Since we do not know the absolute values of the stock returns, we cannot draw effective conclusions. Some days may actually witness bigger negative returns than others or some days may have higher average positive returns.")
+
+```
+```{r}
+
+### ANSWER 3 ###
+
+gss = read.csv("GSS2014.csv")
+
+size = length(gss$DEGREE)
+
+lessthanhigh = sum(gss$DEGREE==0)
+highschool = sum(gss$DEGREE==1)
+somecollege = sum(gss$DEGREE==2)
+graduate = sum(gss$DEGREE==3 | gss$DEGREE==4)
+
+expected = c(0.123,0.296,0.194,0.386)*100
+actual = c(lessthanhigh,highschool,somecollege,graduate)*100/size
+
+sprintf("H0: The actual proportions of education level are the same as the expected proportions")
+sprintf("H1: The actual proportions of education level are different to the expected proportions")
+
+chitable = data.frame(actual,expected)
+#chitable
+chisq.test(chitable)
+
+expected_alt = c(0.124,0.296,0.194,0.386)
+actual_alt = c(lessthanhigh,highschool,somecollege,graduate)
+actual_alt
+chisq.test(x=actual_alt,p=expected_alt)
+
+sprintf("Since the p-value is significant we can reject the Null Hypothesis and hence infer that atleast one education category is overrepresented.")
+```
+```{r}
+
+### ANSWER 4 ###
+
+# Born - 1 for citizens, 2 for immigrants
+# Degree - Over 2 categories
+# 2 populations, more than 2 categories - chi squared contingency table
+
+gss2 = read.csv("GSS2014.csv")
+
+sprintf("H0: Education level depends on citizenship status -  Immigrants and Citizens")
+sprintf("H1: Education level does not depend on citizenship status - Immigrants and Citizens")
+
+chisq.test(gss2$BORN,gss2$DEGREE)
+
+sprintf("Since the p-value is very small we can reject the Null Hypothesis that Educational levels are not different for Immigrants and Citizens.")
+```
+

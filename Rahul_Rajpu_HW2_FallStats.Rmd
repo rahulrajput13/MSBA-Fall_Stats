@@ -1,0 +1,209 @@
+---
+title: "Rahul Rajput_HW2_FallStats"
+author: "Rahul Rajput"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+
+### ANSWER 1 ###
+
+displayspace = read.csv("Display Space.csv")
+displayspace
+
+# Part a #
+plot(displayspace$Display.Feet,displayspace$Sales)
+abline(reg=lm(displayspace$Sales ~ displayspace$Display.Feet))
+
+sprintf("The relationship between display area and sales does not appear to be exactly linear.It can be linear especially if the increased display space comes at the cost of space allocated for competitor items. However it may not be linear at the ends.")
+
+# Part b #
+model_1b = lm(displayspace$Sales~displayspace$Display.Feet)
+cor(displayspace$Display.Feet,displayspace$Sales)
+cor.test(displayspace$Display.Feet,displayspace$Sales, 
+         alternative = "two.sided", method = "pearson")
+#Highly signifivcant p-value so we can infer that there is a linear relationship between the two variables
+anova(model_1b)
+coef(model_1b)
+summary(model_1b)
+
+sprintf("The intercept of the linear model = 93.03 and the slope = 39.76. This implies that for every unit increase in display area the weekly sales increases by roughly 40 dollars. However the intercept implies that even with no display area the expected weekly sales would be equal to roughly 93 dollars, which might not be true.")
+
+# Part c #
+plot(displayspace$Display.Feet,displayspace$Sales)
+
+log_display.feet = log10(displayspace$Display.Feet)
+plot(log_display.feet,displayspace$Sales)
+abline(reg = lm(displayspace$Sales~log_display.feet))
+
+model_1c = lm(displayspace$Sales~log_display.feet)
+cor(log_display.feet,displayspace$Sales)
+cor.test(log_display.feet,displayspace$Sales,
+         alternative = "two.sided", method = "pearson")
+#Highly signifivcant p-value so we can infer that there is a linear relationship between the two variables
+anova(model_1c)
+coef(model_1c)
+summary(model_1c)
+
+sprintf("On tranforming the display area size (x-axis) into log values based on Tukey's Bulging Rule, we observed that the relationship seemed more linear than the previous model. The intercept of the linear model = 83.56 and the slope = 319.19. This implies that for every unit increase in the log of display area the weekly sales increases by roughly 320 dollars.")
+
+# Part d #
+
+sprintf("The R^2 value for the second model is greater than the first model, therefore the second model is a better fit for the data. The first model is able to explain 71%% of the variation in the Sales values whereas the second model can explain 81%% of the variation in the Sales values. The p values for the slopes in both the model is highly significant which implies we can reject the null hypothesis that there is no linear relationship between the two variables, and be reasonably confident about the linear relationship for both models. However Model 2 is the better fit")
+
+```
+```{r}
+
+### ANSWER 2 ###
+
+banks = read.csv("CommunityBanks.csv")
+#banks
+
+# Part a #
+
+sprintf("ROAA = f(Efficiency Ratio, Total Risk Based Capital)")
+sprintf("ROAA = beta0+ beta1*Efficiency Ratio + beta2*Total Risk Based Capital + Error")
+
+# Part b #
+
+plot(banks[3:5])
+cor(banks[3:5])
+
+sprintf("From the scatter plots and correlation coefficients we see that there is a moderate negative correlation between ROAA and Efficiency Ratio and a moderate positive correlation between ROAA and Total Risk Based Capital Ratio.")
+
+ROAA = banks$ROAA....
+EffRatio = banks$Efficiency.Ratio....
+TotalRBCR = banks$Total.Risk.Based.Capital.Ratio....
+
+roaamodel = lm(ROAA ~ EffRatio + TotalRBCR, data=banks)
+roaamodel
+# Part c #
+
+#significance level = 0.05
+anova(roaamodel)
+summary(roaamodel)
+
+sprintf("H0: beta1 = beta2 = 0")
+sprintf("H0: Atleast one of beta1 or beta2 is not zero")
+sprintf("The p-value for the Global F-statistic is highly significant therefore we can reject the Null Hypothesis. The overall model is valid.")
+
+# Part d #
+
+summary(roaamodel)
+sprintf("Based on the p values from the individual t-tests for the independent variables we can conclude that both independent variables make a significant contribution to the model.")
+
+confint(roaamodel,"EffRatio",level=0.95)
+confint(roaamodel,"TotalRBCR",level=0.95)
+
+sprintf("Since neither of the confidence intervals for beta1 and beta2 include zero we can conclude that both independent variables make a significant contribution to the model.")
+
+# Part e #
+
+sprintf("For a single unit increase in the Efficiency Ratio of a Financial Institution the ROAA decreases by a value of 0.012, assuming all other independent variables are kept constant.")
+
+sprintf("For a single unit increase in the Total Risk Based Capital Ratio of a Financial Institution the ROAA increases by a value of 0.023, assuming all other independent variables are kept constant.")
+
+# Part f #
+
+anova(roaamodel)
+summary(roaamodel)
+
+#R2 = SSR/SST or 1 - (SSE/SST)
+
+sprintf("The value of R-squared is 0.2785. This implies that only 27.85%% of the variation in the ROAA is explained by the model we have made.")
+
+# Part g #
+
+Adj_Rsquare = 1-0.0783/var(ROAA)
+sprintf("The value of adjusted R-squared is %f.",Adj_Rsquare)
+
+# Part h #
+
+conf_predict = predict(roaamodel, data.frame(EffRatio = 60, TotalRBCR = 15), interval = "confidence", level = 0.95)
+sprintf("The 95%% confidence interval for the mean ROAA when the Efficiency Ratio is 60%% and the Total Risk Based Capital Ratio is 15%% is %f : %f",conf_predict[2],conf_predict[3])
+
+# Part i #
+
+pred_predict = predict(roaamodel, data.frame(EffRatio = 60, TotalRBCR = 15), interval = "prediction", level = 0.95)
+pred_predict
+sprintf("The 95%% prediction interval for the ROAA of a particular community bank when the Efficiency Ratio is 60%% and the Total Risk Based Capital Ratio is 15%% is %f : %f",pred_predict[2],pred_predict[3])
+```
+```{r}
+
+### ANSWER 3 ###
+
+med = read.csv("MedicalCo.csv")
+med
+
+sprintf("Sales = f(Advertising, Bonus, MarketShare, CompetitorSales)")
+sprintf("Sales = beta0+ beta1*Advertising + beta2*Bonus + beta3*MarketShare + beta4*CompetitorSales + Error")
+
+# To compare full model with 4 variables to reduced model with 2 variables
+
+Sales = med$SALES
+Adv = med$ADV
+Bonus = med$BONUS
+MarketShare = med$MKTSHR
+Competitor = med$COMPET
+
+medfull = lm(Sales ~ Adv+Bonus+MarketShare+Competitor, data=med)
+medreduced = lm(Sales ~ Adv+Bonus, data=med)
+
+# Calculating F statistic
+
+anova(medfull)
+summary(medfull)
+anova(medreduced)
+
+# The p-value for the Global F statistic is significant
+
+MSE_full = 8793
+SSE_full = 175855
+SSE_reduced = 181176
+df = 4-2
+
+partialfstat = ((SSE_reduced - SSE_full)/2)/MSE_full
+partialfstat
+
+# Calculating p-value for fstat
+
+sprintf("H0: beta3 = beta4 = 0")
+sprintf("H1: Atleast one of beta3 or beta4 is not zero.")
+
+pval_partialfstat = pf(partialfstat, 2, 25-4-1, lower.tail = FALSE)
+
+sprintf("The p-value for the partial statistic is %f",pval_partialfstat)
+sprintf("Since the p-value for the partial F statistic is not significant we fail to reject the null hypothesis and we can infer that the variables - Market Share of the firm and Competitor Sales do not affect the company's sales.")
+
+# Calculating Partial R squared
+
+R2_partial = (SSE_reduced - SSE_full)/SSE_reduced
+R2_partial_percent = R2_partial*100
+
+sprintf("The variables - Market Share of the firm and Competitor Sales are only able to explain %f%% variation in the model which is not explained by Advertisement spending and Bonuses.",R2_partial_percent)
+```
+
